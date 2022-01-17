@@ -1,10 +1,11 @@
-import http
+from http import HTTPStatus
 import logging
 import os
 import time
 import requests
 import telegram
 import json
+import datetime
 
 
 
@@ -17,6 +18,8 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+
+CURRENT_TIMESTAMP = int(datetime.datetime(2021, 1, 1, 0, 0).timestamp())
 
 
 HOMEWORK_STATUSES = {
@@ -37,21 +40,13 @@ logger.addHandler(
 )
 
 
-class StatusNot200(Exception):
-    """HTTP STATUS is not 200"""
-
-
 class RequestError(Exception):
     """Request Error."""
 
 
-class StatusError(Exception):
-    """Status Error."""
-
-
 def send_message(bot, message):
     try:
-        bot.send_photo(TELEGRAM_CHAT_ID, message)
+        bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info(f'Сообщение отправленно: {message}')
     except telegram.TelegramError as error:
         logger.error(f'Сообщение не отправленно: {error}')
@@ -61,11 +56,11 @@ def get_api_answer(current_timestamp):
     params = {'from_date': current_timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             api_answer = (f'ENDPOINT {ENDPOINT} недоступен.',
                           f'Код ответа: {response.status_code}')
             logger.error(api_answer)
-            raise StatusNot200(api_answer)
+            raise requests.HTTPError(api_answer)
         return response.json()
     except requests.exceptions.RequestException as requests_error:
         api_answer = f'Код ответа: {requests_error}'
@@ -102,11 +97,11 @@ def parse_status(homework):
     if homework_name is None:
         api_message = 'Пустое значение homework_name'
         logger.error(api_message)
-        raise StatusError(api_message)
+        raise KeyError(api_message)
     if homework_status not in HOMEWORK_STATUSES.keys():
         api_message = 'Неверный статус работы'
         logger.error(api_message)
-        raise StatusError(api_message)
+        raise KeyError(api_message)
 
     verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -125,10 +120,9 @@ def main():
         exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
-
     while True:
         try:
-            response = get_api_answer()
+            response = get_api_answer(CURRENT_TIMESTAMP)
             homeworks = check_response(response)
             if homeworks:
                 last_homework = homeworks[0]
