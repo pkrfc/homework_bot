@@ -1,15 +1,14 @@
-from http import HTTPStatus
+import datetime
+import json
 import logging
 import os
 import time
+from http import HTTPStatus
+
 import requests
 import telegram
-import json
-import datetime
-
-
-
 from dotenv import load_dotenv
+
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
@@ -45,6 +44,7 @@ class RequestError(Exception):
 
 
 def send_message(bot, message):
+    """Отправляет сообщение в Telegram чат."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info(f'Сообщение отправленно: {message}')
@@ -53,6 +53,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
+    """Делает запрос к единственному эндпоинту API-сервиса."""
     params = {'from_date': current_timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
@@ -73,6 +74,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
+    """Проверяет ответ API на корректность."""
     if not isinstance(response, dict):
         api_message = 'Ожидался словарь.'
         logger.error(api_message)
@@ -92,6 +94,7 @@ def check_response(response):
 
 
 def parse_status(homework):
+    """Извлекает статус работы."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     if homework_name is None:
@@ -108,6 +111,7 @@ def parse_status(homework):
 
 
 def check_tokens():
+    """Проверяет доступность переменных окружения."""
     if TELEGRAM_TOKEN and PRACTICUM_TOKEN and TELEGRAM_CHAT_ID is not None:
         return True
 
