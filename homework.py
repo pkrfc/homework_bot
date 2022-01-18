@@ -1,5 +1,3 @@
-import datetime
-import json
 import logging
 import os
 import time
@@ -18,7 +16,7 @@ RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
-CURRENT_TIMESTAMP = int(datetime.datetime(2021, 1, 1, 0, 0).timestamp())
+CURRENT_TIMESTAMP = int(time.time())
 
 
 HOMEWORK_STATUSES = {
@@ -30,7 +28,6 @@ HOMEWORK_STATUSES = {
 logging.basicConfig(
     level=logging.DEBUG,
     filename='ya_bot.log',
-    filemode='w',
     format='%(asctime)s - %(levelname)s - %(message)s - %(name)s'
 )
 logger = logging.getLogger(__name__)
@@ -67,10 +64,10 @@ def get_api_answer(current_timestamp):
         api_answer = f'Код ответа: {requests_error}'
         logger.error(api_answer)
         raise RequestError(api_answer)
-    except json.JSONDecoder as value_error:
-        api_answer = f'Код ответа: {value_error}'
+    except requests.exceptions.ConnectTimeout as connect_error:
+        api_answer = f'Код ответа: {connect_error}'
         logger.error(api_answer)
-        raise json.JSONDecodeError(api_answer)
+        raise RequestError(api_answer)
 
 
 def check_response(response):
@@ -79,15 +76,15 @@ def check_response(response):
         api_message = 'Ожидался словарь.'
         logger.error(api_message)
         raise TypeError(api_message)
-    if len(response) == 0:
+    if not response:
         api_message = 'Пустой словарь'
         logger.error(api_message)
         raise Exception(api_message)
-    if 'homeworks' not in response.keys():
+    if 'homeworks' not in response:
         api_message = 'Отсутсвует ключ в словаре'
         logger.error(api_message)
         raise Exception(api_message)
-    homeworks = response.get('homeworks')
+    homeworks = response['homeworks']
     if not isinstance(homeworks, list):
         raise Exception('Ошибка данных')
     return homeworks
@@ -102,7 +99,7 @@ def parse_status(homework):
         logger.error(api_message)
         raise KeyError(api_message)
     if homework_status not in HOMEWORK_STATUSES.keys():
-        api_message = 'Неверный статус работы'
+        api_message = 'Неизвестный статус работы'
         logger.error(api_message)
         raise KeyError(api_message)
 
@@ -112,16 +109,20 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет доступность переменных окружения."""
-    if TELEGRAM_TOKEN and PRACTICUM_TOKEN and TELEGRAM_CHAT_ID is not None:
-        return True
+    tokens = [TELEGRAM_TOKEN, PRACTICUM_TOKEN, TELEGRAM_CHAT_ID]
+    for tkn in tokens:
+        if tkn is None:
+            logger.error(f'Не доступна переменная: {tkn}')
+            return False
+    return True
 
 
 def main():
     """Основная логика работы бота."""
     homework_status = 'Неизвестный статус'
-    errors = None
-    if check_tokens() is not True:
-        exit()
+    previous_error = None
+    if not check_tokens():
+        exit(1)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
     while True:
@@ -135,16 +136,14 @@ def main():
                     homework_status = status
                     send_message(bot, status)
                 else:
-                    logger.info('Изменений нет')
+                    logger.debug('Изменений нет')
 
         except Exception as error:
-            if error != errors:
+            if error != previous_error:
                 message = f'Сбой в работе бота: {error}'
                 send_message(bot, message)
-                errors = error
-            time.sleep(RETRY_TIME)
-        else:
-            time.sleep(RETRY_TIME)
+                previous_error = error
+        time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
