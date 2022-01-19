@@ -98,8 +98,8 @@ def get_api_answer(current_timestamp):
         api_answer = f'Код ответа: {requests_error}'
         logger.error(api_answer)
         raise RequestError(api_answer)
-    except json.JSONDecoder as json_error:
-        api_answer = f'Код ответа: {json_error}'
+    except json.JSONDecoder:
+        api_answer = 'Не валидный json'
         logger.error(api_answer)
         raise json.JSONDecodeError(api_answer)
 
