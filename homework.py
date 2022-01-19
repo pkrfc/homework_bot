@@ -99,6 +99,7 @@ def get_api_answer(current_timestamp):
         raise RequestError(api_answer)
 
 
+
 def check_response(response):
     """Проверяет ответ API на корректность."""
     if not isinstance(response, dict):
@@ -138,11 +139,16 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет доступность переменных окружения."""
-    tokens = [TELEGRAM_TOKEN, PRACTICUM_TOKEN, TELEGRAM_CHAT_ID]
-    for tkn in tokens:
-        if tkn is None:
-            logger.error(f'Не доступна переменная: {tkn}')
-            return False
+    if TELEGRAM_CHAT_ID is None:
+        logger.error('Не доступна переменная: TELEGRAM_CHAT_ID')
+        return False
+    if PRACTICUM_TOKEN is None:
+        logger.error('Не доступна переменная: PRACTICUM_TOKEN ')
+        return False
+    if TELEGRAM_TOKEN is None:
+        logger.error('Не доступна переменная: TELEGRAM_TOKEN')
+        return False
+
     return True
 
 
