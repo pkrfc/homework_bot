@@ -127,7 +127,7 @@ def parse_status(homework):
         api_message = 'Пустое значение homework_name'
         logger.error(api_message)
         raise KeyError(api_message)
-    if homework_status not in HOMEWORK_STATUSES:
+    if homework_status not in HOMEWORK_STATUSES.keys:
         api_message = f'Неизвестный статус работы: {homework_status}'
         logger.error(api_message)
         raise KeyError(api_message)
