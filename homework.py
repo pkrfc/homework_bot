@@ -19,12 +19,28 @@ HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 CURRENT_TIMESTAMP = int(time.time())
 
-
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
+
+
+class TelegramLogsHandler(logging.Handler):
+    """Логи в чатик."""
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
+
+    def __init__(self, bot, TELEGRAM_CHAT_ID):
+        """Init."""
+        super().__init__()
+        self.chat_id = TELEGRAM_CHAT_ID
+        self.bot = bot
+
+    def emit(self, record):
+        """Emit."""
+        log_entry = self.format(record)
+        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
+
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -34,6 +50,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.addHandler(
     logging.StreamHandler()
+)
+logger.addHandler(
+    TelegramLogsHandler(telegram.Bot(token=TELEGRAM_TOKEN), TELEGRAM_CHAT_ID)
 )
 
 
