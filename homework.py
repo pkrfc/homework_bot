@@ -27,22 +27,6 @@ HOMEWORK_STATUSES = {
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
-
-class TelegramLogsHandler(logging.Handler):
-    """Логи в чатик."""
-
-    def __init__(self, bot, TELEGRAM_CHAT_ID):
-        """Init."""
-        super().__init__()
-        self.chat_id = TELEGRAM_CHAT_ID
-        self.bot = bot
-
-    def emit(self, record):
-        """Emit."""
-        log_entry = self.format(record)
-        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
-
-
 logging.basicConfig(
     level=logging.DEBUG,
     filename='ya_bot.log',
@@ -51,9 +35,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.addHandler(
     logging.StreamHandler()
-)
-logger.addHandler(
-    TelegramLogsHandler(BOT, TELEGRAM_CHAT_ID)
 )
 
 
