@@ -99,7 +99,6 @@ def get_api_answer(current_timestamp):
         raise RequestError(api_answer)
 
 
-
 def check_response(response):
     """Проверяет ответ API на корректность."""
     if not isinstance(response, dict):
