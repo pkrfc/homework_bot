@@ -25,19 +25,19 @@ HOMEWORK_STATUSES = {
 }
 
 
-class TelegramLogsHandler(logging.Handler):
-    """Логи в чатик."""
+"""class TelegramLogsHandler(logging.Handler):
+
 
     def __init__(self, BOT, TELEGRAM_CHAT_ID):
-        """Init."""
+
         super().__init__()
         self.chat_id = TELEGRAM_CHAT_ID
         self.bot = BOT
 
     def emit(self, record):
-        """Emit."""
+
         log_entry = self.format(record)
-        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
+        self.bot.send_message(chat_id=self.chat_id, text=log_entry)"""
 
 
 logging.basicConfig(
@@ -49,9 +49,9 @@ logger = logging.getLogger(__name__)
 logger.addHandler(
     logging.StreamHandler()
 )
-logger.addHandler(
+"""logger.addHandler(
     TelegramLogsHandler(telegram.Bot(token=TELEGRAM_TOKEN), TELEGRAM_CHAT_ID)
-)
+)"""
 
 
 class RequestError(Exception):
