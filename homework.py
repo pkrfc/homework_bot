@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import json
 from http import HTTPStatus
 
 import requests
@@ -17,13 +18,29 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 CURRENT_TIMESTAMP = int(time.time())
-
+BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
+
+
+class TelegramLogsHandler(logging.Handler):
+    """Логи в чатик."""
+
+    def __init__(self, BOT, TELEGRAM_CHAT_ID):
+        """Init."""
+        super().__init__()
+        self.chat_id = TELEGRAM_CHAT_ID
+        self.bot = BOT
+
+    def emit(self, record):
+        """Emit."""
+        log_entry = self.format(record)
+        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
+
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -34,10 +51,23 @@ logger = logging.getLogger(__name__)
 logger.addHandler(
     logging.StreamHandler()
 )
+logger.addHandler(TelegramLogsHandler(BOT, TELEGRAM_CHAT_ID))
 
 
 class RequestError(Exception):
     """Request Error."""
+
+
+class EmptyDict(Exception):
+    """Пустой словарь."""
+
+
+class ErrorKeyDict(Exception):
+    """Отсутсвует ключ в словаре."""
+
+
+class DataError(Exception):
+    """Ошибка данных."""
 
 
 def send_message(bot, message):
@@ -60,14 +90,18 @@ def get_api_answer(current_timestamp):
             logger.error(api_answer)
             raise requests.HTTPError(api_answer)
         return response.json()
-    except requests.exceptions.RequestException as requests_error:
-        api_answer = f'Код ответа: {requests_error}'
-        logger.error(api_answer)
-        raise RequestError(api_answer)
     except requests.exceptions.ConnectTimeout as connect_error:
         api_answer = f'Код ответа: {connect_error}'
         logger.error(api_answer)
         raise RequestError(api_answer)
+    except requests.exceptions.RequestException as requests_error:
+        api_answer = f'Код ответа: {requests_error}'
+        logger.error(api_answer)
+        raise RequestError(api_answer)
+    except json.JSONDecoder as json_error:
+        api_answer = f'Код ответа: {json_error}'
+        logger.error(api_answer)
+        raise json.JSONDecodeError(api_answer)
 
 
 def check_response(response):
@@ -79,14 +113,14 @@ def check_response(response):
     if not response:
         api_message = 'Пустой словарь'
         logger.error(api_message)
-        raise Exception(api_message)
+        raise EmptyDict(api_message)
     if 'homeworks' not in response:
         api_message = 'Отсутсвует ключ в словаре'
         logger.error(api_message)
-        raise Exception(api_message)
+        raise ErrorKeyDict(api_message)
     homeworks = response['homeworks']
     if not isinstance(homeworks, list):
-        raise Exception('Ошибка данных')
+        raise DataError('Ошибка данных')
     return homeworks
 
 
@@ -98,8 +132,8 @@ def parse_status(homework):
         api_message = 'Пустое значение homework_name'
         logger.error(api_message)
         raise KeyError(api_message)
-    if homework_status not in HOMEWORK_STATUSES.keys():
-        api_message = 'Неизвестный статус работы'
+    if homework_status not in HOMEWORK_STATUSES:
+        api_message = f'Неизвестный статус работы: {homework_status}'
         logger.error(api_message)
         raise KeyError(api_message)
 
@@ -112,7 +146,7 @@ def check_tokens():
     tokens = [TELEGRAM_TOKEN, PRACTICUM_TOKEN, TELEGRAM_CHAT_ID]
     for tkn in tokens:
         if tkn is None:
-            logger.error(f'Не доступна переменная: {tkn}')
+            logger.error('Не доступна переменная')
             return False
     return True
 
