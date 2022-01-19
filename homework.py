@@ -18,7 +18,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 CURRENT_TIMESTAMP = int(time.time())
-BOT = telegram.Bot(token=TELEGRAM_TOKEN)
+
 
 
 HOMEWORK_STATUSES = {
