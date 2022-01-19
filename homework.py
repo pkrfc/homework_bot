@@ -108,14 +108,14 @@ def check_response(response):
     if not response:
         api_message = 'Пустой словарь'
         logger.error(api_message)
-        raise EmptyDict(api_message)
+        raise Exception(api_message)
     if 'homeworks' not in response:
         api_message = 'Отсутсвует ключ в словаре'
         logger.error(api_message)
-        raise ErrorKeyDict(api_message)
+        raise Exception(api_message)
     homeworks = response['homeworks']
     if not isinstance(homeworks, list):
-        raise DataError('Ошибка данных')
+        raise Exception('Ошибка данных')
     return homeworks
 
 
@@ -127,7 +127,7 @@ def parse_status(homework):
         api_message = 'Пустое значение homework_name'
         logger.error(api_message)
         raise KeyError(api_message)
-    if homework_status not in HOMEWORK_STATUSES.keys:
+    if homework_status not in HOMEWORK_STATUSES:
         api_message = f'Неизвестный статус работы: {homework_status}'
         logger.error(api_message)
         raise KeyError(api_message)
