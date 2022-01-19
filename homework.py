@@ -20,7 +20,6 @@ HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 CURRENT_TIMESTAMP = int(time.time())
 
 
-
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
