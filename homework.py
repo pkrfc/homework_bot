@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-import json
 from http import HTTPStatus
 
 import requests
@@ -18,6 +17,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 CURRENT_TIMESTAMP = int(time.time())
+BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
@@ -29,13 +29,11 @@ HOMEWORK_STATUSES = {
 class TelegramLogsHandler(logging.Handler):
     """Логи в чатик."""
 
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-
-    def __init__(self, bot, TELEGRAM_CHAT_ID):
+    def __init__(self, BOT, TELEGRAM_CHAT_ID):
         """Init."""
         super().__init__()
         self.chat_id = TELEGRAM_CHAT_ID
-        self.bot = bot
+        self.bot = BOT
 
     def emit(self, record):
         """Emit."""
@@ -52,9 +50,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(
     logging.StreamHandler()
 )
-logger.addHandler(
-    TelegramLogsHandler(telegram.Bot(token=TELEGRAM_TOKEN), TELEGRAM_CHAT_ID)
-)
+logger.addHandler(TelegramLogsHandler(BOT, TELEGRAM_CHAT_ID))
 
 
 class RequestError(Exception):
@@ -101,10 +97,6 @@ def get_api_answer(current_timestamp):
         api_answer = f'Код ответа: {requests_error}'
         logger.error(api_answer)
         raise RequestError(api_answer)
-    except json.JSONDecoder as json_error:
-        api_answer = f'Код ответа: {json_error}'
-        logger.error(api_answer)
-        raise json.JSONDecodeError(api_answer)
 
 
 def check_response(response):
@@ -146,11 +138,16 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет доступность переменных окружения."""
-    tokens = [TELEGRAM_TOKEN, PRACTICUM_TOKEN, TELEGRAM_CHAT_ID]
-    for tkn in tokens:
-        if tkn is None:
-            logger.error('Отсутсвует токен')
-            return False
+    if TELEGRAM_CHAT_ID is None:
+        logger.error('Не доступна переменная: TELEGRAM_CHAT_ID')
+        return False
+    if PRACTICUM_TOKEN is None:
+        logger.error('Не доступна переменная: PRACTICUM_TOKEN ')
+        return False
+    if TELEGRAM_TOKEN is None:
+        logger.error('Не доступна переменная: TELEGRAM_TOKEN')
+        return False
+
     return True
 
 
