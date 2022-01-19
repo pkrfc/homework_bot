@@ -28,6 +28,7 @@ HOMEWORK_STATUSES = {
 
 class TelegramLogsHandler(logging.Handler):
     """Логи в чатик."""
+
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
     def __init__(self, bot, TELEGRAM_CHAT_ID):
