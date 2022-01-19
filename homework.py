@@ -17,7 +17,6 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 CURRENT_TIMESTAMP = int(time.time())
-BOT = telegram.Bot(token=TELEGRAM_TOKEN)
 
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
@@ -50,7 +49,9 @@ logger = logging.getLogger(__name__)
 logger.addHandler(
     logging.StreamHandler()
 )
-logger.addHandler(TelegramLogsHandler(BOT, TELEGRAM_CHAT_ID))
+logger.addHandler(
+    TelegramLogsHandler(telegram.Bot(token=TELEGRAM_TOKEN), TELEGRAM_CHAT_ID)
+)
 
 
 class RequestError(Exception):
