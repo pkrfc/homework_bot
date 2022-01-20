@@ -7,6 +7,8 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
+from bot_handler import bot_t
+
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
@@ -24,8 +26,6 @@ HOMEWORK_STATUSES = {
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
-
-bot_t = telegram.Bot(token=TELEGRAM_TOKEN)
 
 
 class TelegramLogsHandler(logging.Handler):
@@ -163,6 +163,7 @@ def main():
     if not check_tokens():
         exit(1)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
+
     while True:
         try:
             response = get_api_answer(CURRENT_TIMESTAMP)
