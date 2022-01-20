@@ -7,7 +7,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-from bot_handler import bot_t
+from bot_handler import TelegramLogsHandler
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -27,22 +27,6 @@ HOMEWORK_STATUSES = {
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
-
-class TelegramLogsHandler(logging.Handler):
-    """Логи в чатик."""
-
-    def __init__(self, bot, telegram_chat_id):
-        """Init."""
-        super().__init__()
-        self.chat_id = telegram_chat_id
-        self.bot = bot
-
-    def emit(self, record):
-        """Emit."""
-        log_entry = self.format(record)
-        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
-
-
 logging.basicConfig(
     level=logging.DEBUG,
     filename='ya_bot.log',
@@ -53,7 +37,7 @@ logger.addHandler(
     logging.StreamHandler()
 )
 logger.addHandler(
-    TelegramLogsHandler(bot_t, TELEGRAM_CHAT_ID)
+    TelegramLogsHandler(TELEGRAM_CHAT_ID)
 )
 
 
