@@ -7,8 +7,6 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-from bot_handler import TelegramLogsHandler
-
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
@@ -33,12 +31,6 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s - %(name)s'
 )
 logger = logging.getLogger(__name__)
-logger.addHandler(
-    logging.StreamHandler()
-)
-logger.addHandler(
-    TelegramLogsHandler(TELEGRAM_CHAT_ID)
-)
 
 
 class RequestError(Exception):
