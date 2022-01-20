@@ -17,7 +17,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 CURRENT_TIMESTAMP = int(time.time())
-"""BOT = telegram.Bot(token=TELEGRAM_TOKEN)"""
+
 
 HOMEWORK_STATUSES = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
@@ -25,20 +25,22 @@ HOMEWORK_STATUSES = {
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
+bot_t = telegram.Bot(token=TELEGRAM_TOKEN)
 
-"""class TelegramLogsHandler(logging.Handler):
 
+class TelegramLogsHandler(logging.Handler):
+    """Логи в чатик."""
 
-    def __init__(self, BOT, TELEGRAM_CHAT_ID):
-
+    def __init__(self, bot, telegram_chat_id):
+        """Init."""
         super().__init__()
-        self.chat_id = TELEGRAM_CHAT_ID
-        self.bot = BOT
+        self.chat_id = telegram_chat_id
+        self.bot = bot
 
     def emit(self, record):
-
+        """Emit."""
         log_entry = self.format(record)
-        self.bot.send_message(chat_id=self.chat_id, text=log_entry)"""
+        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
 logging.basicConfig(
@@ -50,9 +52,9 @@ logger = logging.getLogger(__name__)
 logger.addHandler(
     logging.StreamHandler()
 )
-"""logger.addHandler(
-    TelegramLogsHandler(BOT, TELEGRAM_CHAT_ID)
-)"""
+logger.addHandler(
+    TelegramLogsHandler(bot_t, TELEGRAM_CHAT_ID)
+)
 
 
 class RequestError(Exception):
@@ -90,11 +92,12 @@ def get_api_answer(current_timestamp):
                           f'Код ответа: {response.status_code}')
             logger.error(api_answer)
             raise requests.HTTPError(api_answer)
-        return response.json()
-    except requests.exceptions.ConnectTimeout as connect_error:
-        api_answer = f'Код ответа: {connect_error}'
-        logger.error(api_answer)
-        raise RequestError(api_answer)
+        try:
+            return response.json()
+        except ValueError as error:
+            logger.error(error)
+            raise ValueError('Ошибка из распаковки')
+
     except requests.exceptions.RequestException as requests_error:
         api_answer = f'Код ответа: {requests_error}'
         logger.error(api_answer)
@@ -160,7 +163,6 @@ def main():
     if not check_tokens():
         exit(1)
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-
     while True:
         try:
             response = get_api_answer(CURRENT_TIMESTAMP)
