@@ -17,7 +17,7 @@ https://github.com/pkrfc/homework_bot
 ```
 
 ```
-cd api_final_yatube
+cd homework_bot
 ```
 
 Cоздать и активировать виртуальное окружение:
